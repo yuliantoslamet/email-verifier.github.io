@@ -1,0 +1,1255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Email Verifier Pro — Multi-Layer v2</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Cabinet+Grotesk:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+<style>
+/* ── Reset & Theme ── */
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+:root {
+  --bg:        #060810;
+  --surface:   #0c0e18;
+  --card:      #10131f;
+  --border:    #1e2235;
+  --border-h:  #2e3450;
+
+  --cyan:      #00d4e8;
+  --purple:    #8b5cf6;
+  --green:     #10d97a;
+  --red:       #f43060;
+  --amber:     #f59e0b;
+  --blue:      #3b82f6;
+
+  --text:      #dde1f5;
+  --muted:     #5a5f7a;
+  --dim:       #2e3250;
+
+  --r-sm:  8px;
+  --r-md:  14px;
+  --r-lg:  20px;
+  --r-xl:  28px;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Cabinet Grotesk', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Ambient glow */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 500px;
+  background:
+    radial-gradient(ellipse 60% 40% at 15% 0%, rgba(0,212,232,0.055) 0%, transparent 70%),
+    radial-gradient(ellipse 50% 35% at 85% 0%, rgba(139,92,246,0.05) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── Layout ── */
+.page {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 48px 20px 100px;
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Header ── */
+header {
+  margin-bottom: 52px;
+  animation: slideDown .5s ease both;
+}
+.header-inner {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+.header-left {}
+.badge-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 100px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: .5px;
+}
+.badge-cyan  { background: rgba(0,212,232,.1);  border: 1px solid rgba(0,212,232,.25); color: var(--cyan); }
+.badge-green { background: rgba(16,217,122,.1); border: 1px solid rgba(16,217,122,.25); color: var(--green); }
+.badge-purple { background: rgba(139,92,246,.1);border: 1px solid rgba(139,92,246,.25); color: var(--purple); }
+
+h1 {
+  font-size: clamp(26px, 4.5vw, 44px);
+  font-weight: 800;
+  letter-spacing: -1px;
+  line-height: 1.1;
+}
+h1 .grad {
+  background: linear-gradient(95deg, var(--cyan) 0%, var(--purple) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.header-sub {
+  color: var(--muted);
+  font-size: 14px;
+  margin-top: 10px;
+  font-weight: 400;
+  max-width: 520px;
+  line-height: 1.6;
+}
+
+/* Layer legend pills */
+.layer-pills {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.layer-pill {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.layer-pill .lp-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--muted);
+}
+.layer-pill .lp-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ── Cards ── */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-xl);
+  padding: 28px 32px;
+  margin-bottom: 20px;
+}
+.card-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 22px;
+}
+.card-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+.card-label span { color: var(--cyan); }
+
+/* ── Upload Zone ── */
+.upload-zone {
+  border: 2px dashed var(--border);
+  border-radius: var(--r-lg);
+  padding: 44px 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all .25s ease;
+  position: relative;
+}
+.upload-zone:hover, .upload-zone.over {
+  border-color: var(--cyan);
+  background: rgba(0,212,232,.03);
+}
+.upload-zone input[type=file] {
+  position: absolute; inset: 0; opacity: 0; cursor: pointer;
+}
+.upload-icon {
+  width: 60px; height: 60px;
+  background: linear-gradient(135deg, rgba(0,212,232,.1), rgba(139,92,246,.1));
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 26px;
+  margin: 0 auto 18px;
+}
+.upload-title { font-size: 17px; font-weight: 700; margin-bottom: 6px; }
+.upload-hint  { color: var(--muted); font-size: 13px; margin-bottom: 18px; line-height: 1.5; }
+.upload-hint code {
+  color: var(--cyan);
+  background: rgba(0,212,232,.08);
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+}
+
+.file-pill {
+  display: none;
+  align-items: center;
+  gap: 14px;
+  background: rgba(0,212,232,.05);
+  border: 1px solid rgba(0,212,232,.2);
+  border-radius: var(--r-md);
+  padding: 14px 18px;
+  margin-top: 16px;
+}
+.file-pill.show { display: flex; }
+.file-pill-info { flex: 1; }
+.file-pill-name { font-weight: 600; font-size: 14px; }
+.file-pill-meta { color: var(--muted); font-size: 12px; margin-top: 2px; }
+
+/* ── Buttons ── */
+.btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 11px 24px;
+  border-radius: var(--r-sm);
+  font-family: 'Cabinet Grotesk', sans-serif;
+  font-size: 14px; font-weight: 600;
+  cursor: pointer; border: none;
+  transition: all .2s ease;
+  text-decoration: none;
+}
+.btn-primary {
+  background: linear-gradient(135deg, var(--cyan), #009ab5);
+  color: #000;
+}
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(0,212,232,.3); }
+.btn-primary:disabled { opacity: .35; cursor: not-allowed; transform: none; box-shadow: none; }
+.btn-ghost {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+.btn-ghost:hover { border-color: var(--border-h); }
+.btn-sm { padding: 7px 16px; font-size: 12px; border-radius: 6px; }
+
+/* ── Options ── */
+.opt-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 10px;
+}
+.opt-item {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 14px 16px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-md);
+  cursor: pointer;
+  transition: all .2s;
+  user-select: none;
+}
+.opt-item:hover { border-color: var(--border-h); }
+.opt-item.on { border-color: var(--cyan); background: rgba(0,212,232,.04); }
+.opt-item input { display: none; }
+.opt-check {
+  width: 18px; height: 18px;
+  border-radius: 5px;
+  border: 1.5px solid var(--border-h);
+  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; color: #000;
+  transition: all .2s;
+  margin-top: 1px;
+}
+.opt-item.on .opt-check { background: var(--cyan); border-color: var(--cyan); }
+.opt-label { font-size: 13px; font-weight: 600; }
+.opt-sub   { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+/* DNS mode toggle */
+.mode-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: rgba(245,158,11,.05);
+  border: 1px solid rgba(245,158,11,.2);
+  border-radius: var(--r-sm);
+  margin-top: 16px;
+  font-size: 13px;
+  font-weight: 500;
+}
+.mode-row .mode-icon { font-size: 18px; }
+.mode-row strong { color: var(--amber); }
+.toggle-wrap { margin-left: auto; }
+.toggle {
+  position: relative;
+  width: 38px; height: 20px;
+  cursor: pointer;
+}
+.toggle input { display: none; }
+.toggle-track {
+  width: 38px; height: 20px;
+  background: var(--dim);
+  border-radius: 100px;
+  transition: background .2s;
+}
+.toggle input:checked ~ .toggle-track { background: var(--amber); }
+.toggle-thumb {
+  position: absolute;
+  top: 3px; left: 3px;
+  width: 14px; height: 14px;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform .2s;
+}
+.toggle input:checked ~ .toggle-thumb { transform: translateX(18px); }
+
+/* ── Progress ── */
+#section-progress { display: none; }
+.prog-head {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 10px; font-size: 14px;
+}
+.prog-pct { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--cyan); }
+.prog-bar-wrap {
+  background: var(--surface);
+  border-radius: 100px;
+  height: 6px;
+  overflow: hidden;
+}
+.prog-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--cyan), var(--purple));
+  border-radius: 100px;
+  width: 0%;
+  transition: width .3s ease;
+}
+.prog-sub {
+  margin-top: 8px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Stats ── */
+#section-results { display: none; }
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 14px;
+  margin-bottom: 28px;
+}
+.stat {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 18px 16px;
+  text-align: center;
+}
+.stat-n {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1;
+  margin-bottom: 5px;
+}
+.stat-lbl { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+.c-total   .stat-n { color: var(--cyan);   }
+.c-valid   .stat-n { color: var(--green);  }
+.c-risky   .stat-n { color: var(--amber);  }
+.c-invalid .stat-n { color: var(--red);    }
+.c-disp    .stat-n { color: var(--purple); }
+
+/* ── Filter bar ── */
+.filter-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+.fbtn {
+  padding: 7px 16px;
+  border-radius: 100px;
+  font-size: 12px; font-weight: 600;
+  cursor: pointer; border: 1.5px solid var(--border);
+  background: transparent; color: var(--muted);
+  transition: all .2s;
+}
+.fbtn.active { border-color: currentColor; }
+.fbtn-all.active    { color: var(--cyan);   border-color: var(--cyan); }
+.fbtn-valid.active  { color: var(--green);  border-color: var(--green); }
+.fbtn-risky.active  { color: var(--amber);  border-color: var(--amber); }
+.fbtn-invalid.active{ color: var(--red);    border-color: var(--red); }
+
+/* ── Table ── */
+.tbl-wrap {
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  max-height: 480px;
+}
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+thead { position: sticky; top: 0; background: var(--surface); z-index: 1; }
+th {
+  padding: 12px 16px;
+  text-align: left;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; letter-spacing: 1.5px;
+  text-transform: uppercase; color: var(--muted);
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+td {
+  padding: 11px 16px;
+  border-bottom: 1px solid rgba(255,255,255,.03);
+  vertical-align: middle;
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: rgba(255,255,255,.018); }
+
+.email-mono { font-family: 'JetBrains Mono', monospace; font-size: 12px; }
+.score-bar-wrap {
+  display: flex; align-items: center; gap: 8px;
+  min-width: 120px;
+}
+.score-mini {
+  flex: 1;
+  height: 4px;
+  background: var(--dim);
+  border-radius: 100px;
+  overflow: hidden;
+}
+.score-mini-fill { height: 100%; border-radius: 100px; }
+.score-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; font-weight: 700;
+  min-width: 26px; text-align: right;
+}
+
+/* Status badge */
+.sbadge {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 10px; border-radius: 100px;
+  font-size: 10px; font-weight: 700;
+  white-space: nowrap;
+}
+.sb-low     { background: rgba(16,217,122,.1); color: var(--green); }
+.sb-medium  { background: rgba(245,158,11,.1); color: var(--amber); }
+.sb-high    { background: rgba(244,48,96,.1);  color: var(--red);   }
+.sbadge-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+
+/* Flags cell */
+.flags-wrap { display: flex; flex-wrap: wrap; gap: 4px; max-width: 300px; }
+.flag-chip {
+  background: rgba(139,92,246,.08);
+  border: 1px solid rgba(139,92,246,.2);
+  color: #9d7df7;
+  padding: 2px 8px; border-radius: 4px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; font-weight: 500;
+  white-space: nowrap;
+}
+.flag-chip.fc-warn {
+  background: rgba(245,158,11,.08);
+  border-color: rgba(245,158,11,.2);
+  color: #f5b53a;
+}
+.flag-chip.fc-bad {
+  background: rgba(244,48,96,.08);
+  border-color: rgba(244,48,96,.2);
+  color: #f46080;
+}
+.no-flags { color: var(--muted); font-size: 11px; font-family: 'JetBrains Mono', monospace; }
+
+/* Layer cells */
+.l1-ok  { color: var(--green); font-size: 11px; font-family: 'JetBrains Mono', monospace; }
+.l1-no  { color: var(--red);   font-size: 11px; font-family: 'JetBrains Mono', monospace; }
+.l2-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; padding: 2px 8px;
+  border-radius: 4px; border: 1px solid;
+  white-space: nowrap;
+}
+.l2-valid   { color: var(--green);  background: rgba(16,217,122,.07); border-color: rgba(16,217,122,.2); }
+.l2-invalid { color: var(--red);    background: rgba(244,48,96,.07);  border-color: rgba(244,48,96,.2); }
+.l2-disp    { color: var(--purple); background: rgba(139,92,246,.07); border-color: rgba(139,92,246,.2); }
+.l2-unk     { color: var(--amber);  background: rgba(245,158,11,.07); border-color: rgba(245,158,11,.2); }
+.l2-skip    { color: var(--muted);  background: rgba(255,255,255,.03); border-color: var(--dim); }
+
+/* Export row */
+.export-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px; }
+
+/* JSON preview */
+.json-preview {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 18px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  line-height: 1.7;
+  overflow: auto;
+  max-height: 340px;
+  display: none;
+  margin-top: 16px;
+}
+.json-preview.show { display: block; }
+.jk { color: #7dd3fc; }
+.jv-str  { color: #86efac; }
+.jv-num  { color: #fbbf24; }
+.jv-low  { color: #10d97a; }
+.jv-med  { color: #f59e0b; }
+.jv-high { color: #f43060; }
+.jv-ok   { color: #10d97a; }
+.jv-bad  { color: #f43060; }
+.jv-grey { color: #6b7280; }
+.jv-pur  { color: #a78bfa; }
+
+/* Single email test */
+.single-row {
+  display: flex; gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+.input-email {
+  flex: 1;
+  min-width: 200px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-sm);
+  color: var(--text);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  padding: 11px 16px;
+  outline: none;
+  transition: border-color .2s;
+}
+.input-email:focus { border-color: var(--cyan); }
+.input-email::placeholder { color: var(--muted); }
+
+/* ── Animations ── */
+@keyframes slideDown { from { opacity:0; transform: translateY(-18px); } to { opacity:1; transform: none; } }
+@keyframes fadeUp    { from { opacity:0; transform: translateY(18px);  } to { opacity:1; transform: none; } }
+.anim-1 { animation: fadeUp .5s .05s ease both; }
+.anim-2 { animation: fadeUp .5s .12s ease both; }
+.anim-3 { animation: fadeUp .5s .2s  ease both; }
+.anim-4 { animation: fadeUp .5s .28s ease both; }
+.anim-5 { animation: fadeUp .5s .36s ease both; }
+
+/* Spin */
+@keyframes spin { to { transform: rotate(360deg); } }
+.spin {
+  display: inline-block;
+  width: 14px; height: 14px;
+  border: 2px solid rgba(0,0,0,.2);
+  border-top-color: #000;
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+}
+
+.section-gap { margin-top: 8px; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Header -->
+  <header>
+    <div class="header-inner">
+      <div class="header-left">
+        <div class="badge-row">
+          <span class="badge badge-cyan">v2.0</span>
+          <span class="badge badge-purple">Multi-Layer</span>
+          <span class="badge badge-green">Client-Side</span>
+        </div>
+        <h1>Email Verifier<br><span class="grad">Pro Engine</span></h1>
+        <p class="header-sub">3-layer verification pipeline: RFC 5322 syntax → DNS/MX domain validation → heuristic quality scoring. Batch CSV processing with structured JSON output.</p>
+      </div>
+      <div class="layer-pills">
+        <div class="layer-pill">
+          <span class="lp-num">L1</span>
+          <span class="lp-dot" style="background:var(--cyan)"></span>
+          <span>Syntax — RFC 5322</span>
+        </div>
+        <div class="layer-pill">
+          <span class="lp-num">L2</span>
+          <span class="lp-dot" style="background:var(--blue)"></span>
+          <span>Domain — MX / DNS</span>
+        </div>
+        <div class="layer-pill">
+          <span class="lp-num">L3</span>
+          <span class="lp-dot" style="background:var(--purple)"></span>
+          <span>Heuristic — Score 0–100</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Single test -->
+  <div class="card anim-1">
+    <div class="card-label"><span>🧪</span> Quick Single Test</div>
+    <div class="single-row">
+      <input type="text" class="input-email" id="singleInput" placeholder="user@example.com" autocomplete="off" spellcheck="false">
+      <button class="btn btn-primary" id="singleBtn" onclick="testSingle()">Verify Email</button>
+    </div>
+    <div id="jsonPreview" class="json-preview"></div>
+  </div>
+
+  <!-- Upload -->
+  <div class="card anim-2">
+    <div class="card-label"><span>01</span> Upload File</div>
+    <div class="upload-zone" id="uploadZone">
+      <input type="file" id="fileInput" accept=".csv,.xlsx,.xls,.txt">
+      <div class="upload-icon">📂</div>
+      <div class="upload-title">Drag & drop or click to upload</div>
+      <div class="upload-hint">
+        Supported: CSV, Excel (.xlsx / .xls), TXT<br>
+        File must have a column with header <code>email</code>
+      </div>
+      <button class="btn btn-primary" style="pointer-events:none">Browse File</button>
+    </div>
+    <div class="file-pill" id="filePill">
+      <span id="filePillIcon" style="font-size:24px">📄</span>
+      <div class="file-pill-info">
+        <div class="file-pill-name" id="filePillName">—</div>
+        <div class="file-pill-meta" id="filePillMeta">—</div>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="clearFile()">Remove</button>
+    </div>
+  </div>
+
+  <!-- Options -->
+  <div class="card anim-3">
+    <div class="card-label"><span>02</span> Verification Options</div>
+    <div class="opt-grid">
+      <label class="opt-item on" id="opt-dns">
+        <input type="checkbox" checked>
+        <div class="opt-check">✓</div>
+        <div>
+          <div class="opt-label">🌐 Layer 2 DNS</div>
+          <div class="opt-sub">MX / A record lookup</div>
+        </div>
+      </label>
+      <label class="opt-item on" id="opt-disp">
+        <input type="checkbox" checked>
+        <div class="opt-check">✓</div>
+        <div>
+          <div class="opt-label">🗑️ Disposable Check</div>
+          <div class="opt-sub">70+ known providers</div>
+        </div>
+      </label>
+      <label class="opt-item on" id="opt-heur">
+        <input type="checkbox" checked>
+        <div class="opt-check">✓</div>
+        <div>
+          <div class="opt-label">🧠 Heuristic Score</div>
+          <div class="opt-sub">Layer 3 quality scan</div>
+        </div>
+      </label>
+      <label class="opt-item on" id="opt-dedup">
+        <input type="checkbox" checked>
+        <div class="opt-check">✓</div>
+        <div>
+          <div class="opt-label">🧹 Deduplicate</div>
+          <div class="opt-sub">Remove duplicate emails</div>
+        </div>
+      </label>
+      <label class="opt-item on" id="opt-role">
+        <input type="checkbox" checked>
+        <div class="opt-check">✓</div>
+        <div>
+          <div class="opt-label">👤 Role-based Flag</div>
+          <div class="opt-sub">info@, admin@, …</div>
+        </div>
+      </label>
+      <label class="opt-item on" id="opt-typo">
+        <input type="checkbox" checked>
+        <div class="opt-check">✓</div>
+        <div>
+          <div class="opt-label">✏️ Typo Domain</div>
+          <div class="opt-sub">gmial, yaho, hotmai…</div>
+        </div>
+      </label>
+    </div>
+    <div class="mode-row">
+      <span class="mode-icon">⚡</span>
+      <div>
+        <strong>Offline / Fast mode</strong>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px">Skip live DNS — use only local rules (faster, no network)</div>
+      </div>
+      <label class="toggle toggle-wrap">
+        <input type="checkbox" id="offlineToggle">
+        <div class="toggle-track"></div>
+        <div class="toggle-thumb"></div>
+      </label>
+    </div>
+  </div>
+
+  <!-- Run button -->
+  <div class="anim-4" style="text-align:center;margin-bottom:24px">
+    <button class="btn btn-primary" id="runBtn" onclick="runBatch()" disabled style="padding:14px 40px;font-size:15px">
+      ⚡ Run Verification
+    </button>
+  </div>
+
+  <!-- Progress -->
+  <div class="card anim-4" id="section-progress">
+    <div class="card-label"><span>03</span> Processing</div>
+    <div class="prog-head">
+      <span id="progLabel" style="font-weight:600">Verifying...</span>
+      <span class="prog-pct" id="progPct">0%</span>
+    </div>
+    <div class="prog-bar-wrap">
+      <div class="prog-bar" id="progBar"></div>
+    </div>
+    <div class="prog-sub" id="progSub">Initializing...</div>
+  </div>
+
+  <!-- Results -->
+  <div class="card anim-5 section-gap" id="section-results">
+    <div class="card-label"><span>04</span> Results</div>
+
+    <div class="stats-row">
+      <div class="stat c-total">
+        <div class="stat-n" id="sTotal">0</div>
+        <div class="stat-lbl">Total</div>
+      </div>
+      <div class="stat c-valid">
+        <div class="stat-n" id="sValid">0</div>
+        <div class="stat-lbl">Low Risk</div>
+      </div>
+      <div class="stat c-risky">
+        <div class="stat-n" id="sRisky">0</div>
+        <div class="stat-lbl">Medium Risk</div>
+      </div>
+      <div class="stat c-invalid">
+        <div class="stat-n" id="sInvalid">0</div>
+        <div class="stat-lbl">High Risk</div>
+      </div>
+      <div class="stat c-disp">
+        <div class="stat-n" id="sDisp">0</div>
+        <div class="stat-lbl">Disposable</div>
+      </div>
+    </div>
+
+    <div class="filter-bar">
+      <button class="fbtn fbtn-all active" onclick="setFilter('all')">All</button>
+      <button class="fbtn fbtn-valid"  onclick="setFilter('low')">✓ Low Risk</button>
+      <button class="fbtn fbtn-risky"  onclick="setFilter('medium')">⚠ Medium</button>
+      <button class="fbtn fbtn-invalid" onclick="setFilter('high')">✗ High Risk</button>
+    </div>
+
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Email</th>
+            <th>L1 Syntax</th>
+            <th>L2 Domain</th>
+            <th>L3 Score</th>
+            <th>Risk</th>
+            <th>Flags</th>
+          </tr>
+        </thead>
+        <tbody id="resultsBody"></tbody>
+      </table>
+    </div>
+
+    <div class="export-row">
+      <button class="btn btn-primary" onclick="exportCSV('all')">⬇ Export All (.csv)</button>
+      <button class="btn btn-ghost" onclick="exportCSV('low')" style="color:var(--green);border-color:var(--green)">⬇ Low Risk</button>
+      <button class="btn btn-ghost" onclick="exportCSV('high')" style="color:var(--red);border-color:var(--red)">⬇ High Risk</button>
+      <button class="btn btn-ghost" onclick="exportJSON()" style="color:var(--purple);border-color:var(--purple)">⬇ Full JSON</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- SheetJS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+'use strict';
+// ═══════════════════════════════════════════════════════════
+// ── VERIFICATION ENGINE (inline) ──
+// ═══════════════════════════════════════════════════════════
+
+const DISPOSABLE_DOMAINS = new Set([
+  'mailinator.com','guerrillamail.com','guerrillamail.net','guerrillamail.org',
+  'guerrillamail.biz','guerrillamail.de','guerrillamail.info',
+  'tempmail.com','temp-mail.org','temp-mail.io','10minutemail.com',
+  '10minutemail.net','throwaway.email','fakeinbox.com','sharklasers.com',
+  'yopmail.com','yopmail.fr','trashmail.com','trashmail.me','trashmail.net',
+  'dispostable.com','mailnull.com','spamgourmet.com','spamgourmet.net',
+  'tempr.email','discard.email','spam4.me','maildrop.cc','wegwerfmail.de',
+  'spamthisplease.com','tempinbox.com','filzmail.com','throwam.com',
+  'zeroknow.com','binkmail.com','bob.email','clrmail.com',
+  'mailmetrash.com','getairmail.com','jetable.fr.nf','notsharingmy.info',
+  'objectmail.com','ownmail.net','pecinan.com','speed.1s.fr',
+  'supergreatmail.com','suremail.info','thismail.net','tradermail.info',
+  'veryrealemail.com','emailondeck.com','tempsky.com','temporaryemail.net',
+  'temporaryinbox.com','trash2009.com','trashdevil.com','trash-mail.at',
+  'spamevader.net','mailboxy.fun','inoutmail.net','mailexpire.com',
+  'mailfreeonline.com','mailinater.com','mailismagic.com','mailme.lv',
+  'mailscrap.com','mailnew.com',
+]);
+
+const KNOWN_VALID_DOMAINS = new Set([
+  'gmail.com','googlemail.com','yahoo.com','yahoo.co.uk','yahoo.co.id',
+  'yahoo.co.jp','yahoo.fr','yahoo.de','yahoo.es','yahoo.it',
+  'outlook.com','hotmail.com','hotmail.co.uk','live.com','live.co.uk',
+  'msn.com','icloud.com','me.com','mac.com',
+  'protonmail.com','proton.me','pm.me',
+  'zoho.com','aol.com','mail.com','gmx.com','gmx.de','gmx.net',
+  'fastmail.com','fastmail.fm','fastmail.net',
+  'yandex.com','yandex.ru','tutanota.com','tutamail.com',
+  'mailbox.org','hey.com','basecamp.com',
+  'web.de','freenet.de','libero.it','virgilio.it',
+  'orange.fr','free.fr','sfr.fr','laposte.net','wanadoo.fr',
+  'rambler.ru','mail.ru','inbox.ru','bk.ru','list.ru',
+  'naver.com','daum.net','hanmail.net',
+  'qq.com','163.com','126.com','sina.com','sohu.com',
+  'rediffmail.com','indiatimes.com','inbox.com','lycos.com',
+]);
+
+const TYPO_DOMAINS = {
+  'gamil.com':'gmail.com','gmai.com':'gmail.com','gmial.com':'gmail.com',
+  'gnail.com':'gmail.com','gmaill.com':'gmail.com','gmail.co':'gmail.com',
+  'gmail.cm':'gmail.com','gmail.con':'gmail.com',
+  'yaho.com':'yahoo.com','yahooo.com':'yahoo.com','yhoo.com':'yahoo.com',
+  'yahoo.co':'yahoo.com','yahoo.cm':'yahoo.com','yaoo.com':'yahoo.com',
+  'hotmai.com':'hotmail.com','hotmial.com':'hotmail.com','homail.com':'hotmail.com',
+  'hotmil.com':'hotmail.com','hotmaill.com':'hotmail.com',
+  'outlok.com':'outlook.com','outloook.com':'outlook.com','outllok.com':'outlook.com',
+  'iclod.com':'icloud.com','icould.com':'icloud.com',
+  'protonmial.com':'protonmail.com','protonmal.com':'protonmail.com',
+};
+
+const ROLE_BASED = new Set([
+  'admin','administrator','webmaster','postmaster','hostmaster',
+  'info','information','contact','hello','hi','hey',
+  'support','help','helpdesk','service','customerservice',
+  'sales','marketing','billing','finance','accounting',
+  'noreply','no-reply','donotreply','do-not-reply',
+  'abuse','spam','security','privacy',
+  'hr','careers','jobs','recruitment',
+  'press','media','pr','news',
+  'legal','compliance','gdpr',
+  'root','sysadmin','devops','ops',
+  'team','staff','office','mail','email',
+  'newsletter','updates','notifications','alerts','mailinglist',
+  'dev','api','bot','daemon','system','mailer',
+]);
+
+const KEYBOARD_PATTERNS = [
+  'qwerty','qwertyuiop','asdf','asdfgh','asdfghjkl',
+  'zxcv','zxcvbn','zxcvbnm','1234','12345','123456',
+  '1234567','12345678','123456789','1234567890',
+  'abcd','abcde','abcdef','abc123','password','pass',
+  'qazwsx','edcrfv','tgbyhn','poiuyt','lkjhgf','mnbvcx',
+];
+
+// LAYER 1
+function validateSyntax(email) {
+  if (!email || typeof email !== 'string')
+    return { status:'invalid_format', reason:'Input is empty or not a string' };
+  const t = email.trim().toLowerCase();
+  if (t.length > 254) return { status:'invalid_format', reason:'Exceeds 254 character limit' };
+  const atCount = (t.match(/@/g)||[]).length;
+  if (atCount !== 1) return { status:'invalid_format', reason: atCount===0?'Missing @ symbol':'Multiple @ symbols' };
+  const [local, domain] = t.split('@');
+  if (!local||local.length===0) return { status:'invalid_format', reason:'Local part is empty' };
+  if (local.length>64) return { status:'invalid_format', reason:'Local part exceeds 64 chars' };
+  if (local.startsWith('.')||local.endsWith('.')) return { status:'invalid_format', reason:'Local part cannot start/end with period' };
+  if (local.includes('..')) return { status:'invalid_format', reason:'Local part has consecutive periods' };
+  if (!/^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+$/.test(local)) return { status:'invalid_format', reason:'Local part has invalid characters' };
+  if (!domain||!domain.includes('.')) return { status:'invalid_format', reason:'Domain missing or no TLD' };
+  if (domain.startsWith('.')||domain.endsWith('.')) return { status:'invalid_format', reason:'Domain cannot start/end with period' };
+  if (domain.startsWith('-')||domain.endsWith('-')) return { status:'invalid_format', reason:'Domain cannot start/end with hyphen' };
+  if (domain.includes('..')) return { status:'invalid_format', reason:'Domain has consecutive periods' };
+  const tld = domain.split('.').pop();
+  if (tld.length<2||!/^[a-zA-Z]{2,}$/.test(tld)) return { status:'invalid_format', reason:'TLD invalid' };
+  const rfc = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*\.[a-zA-Z]{2,}$/;
+  if (!rfc.test(t)) return { status:'invalid_format', reason:'Does not match RFC 5322 pattern' };
+  return { status:'valid_format', reason:'Syntax is valid' };
+}
+
+// LAYER 2
+async function lookupDomain(domain) {
+  const base = 'https://cloudflare-dns.com/dns-query';
+  const h = { 'Accept':'application/dns-json' };
+  try {
+    const mxR = await fetch(`${base}?name=${encodeURIComponent(domain)}&type=MX`,{headers:h});
+    const mxD = await mxR.json();
+    if (mxD.Status===0 && mxD.Answer?.length>0) return { hasMX:true, hasA:true, error:null };
+    const aR = await fetch(`${base}?name=${encodeURIComponent(domain)}&type=A`,{headers:h});
+    const aD = await aR.json();
+    return { hasMX:false, hasA: aD.Status===0 && aD.Answer?.length>0, error:null };
+  } catch(e) {
+    return { hasMX:false, hasA:false, error:e.message };
+  }
+}
+
+async function validateDomain(email, opts={}) {
+  const domain = email.split('@')[1]?.toLowerCase();
+  if (!domain) return { status:'invalid_domain', reason:'Cannot extract domain', mx:null };
+  if (isOptOn('opt-disp') && DISPOSABLE_DOMAINS.has(domain))
+    return { status:'disposable_domain', reason:`Known disposable: ${domain}`, mx:null };
+  if (KNOWN_VALID_DOMAINS.has(domain))
+    return { status:'valid_domain', reason:'Known legitimate provider', mx:true };
+  if (opts.skipDNS || !isOptOn('opt-dns'))
+    return { status:'unknown_domain', reason:'DNS lookup skipped', mx:null };
+  try {
+    const { hasMX, hasA, error } = await lookupDomain(domain);
+    if (error) return { status:'unknown_domain', reason:`DNS error: ${error}`, mx:null };
+    if (hasMX) return { status:'valid_domain', reason:'MX record found', mx:true };
+    if (hasA)  return { status:'valid_domain', reason:'A record found (no MX)', mx:false };
+    return { status:'invalid_domain', reason:'No MX or A record — domain likely fake', mx:false };
+  } catch(_) {
+    return { status:'unknown_domain', reason:'DNS resolution failed', mx:null };
+  }
+}
+
+// LAYER 3
+function scoreHeuristics(email, l2={}) {
+  const flags = [];
+  let ded = 0;
+  const t = email.trim().toLowerCase();
+  const [local, domain] = t.split('@');
+
+  if (!isOptOn('opt-heur')) return { quality_score:70, risk_level:'medium', flags:['heuristics_disabled'] };
+
+  // Username length
+  if (local.length<=2)  { flags.push('very_short_username'); ded+=20; }
+  else if (local.length<=4) { flags.push('short_username'); ded+=8; }
+
+  // Digits
+  const digits = (local.match(/\d/g)||[]).length;
+  if (digits>6) { flags.push('excessive_numbers'); ded+=18; }
+  else if (digits>4) { flags.push('many_numbers'); ded+=8; }
+  if (digits/local.length>0.6 && local.length>4) { flags.push('high_digit_ratio'); ded+=12; }
+
+  // Consonant clusters (randomness signal)
+  const cc = (local.replace(/[0-9._+-]/g,'').match(/[bcdfghjklmnpqrstvwxyz]{4,}/gi)||[]);
+  if (cc.length>=2) { flags.push('random_character_pattern'); ded+=20; }
+  else if (cc.some(c=>c.length>=5)) { flags.push('suspicious_consonant_cluster'); ded+=12; }
+
+  // Keyboard walk
+  if (isOptOn('opt-heur')) {
+    const la = local.replace(/[0-9._+-]/g,'');
+    for (const p of KEYBOARD_PATTERNS) {
+      if (la.includes(p)) { flags.push(`keyboard_pattern:${p}`); ded+=22; break; }
+    }
+  }
+
+  // Repetitive chars
+  if (/(.)\1{3,}/.test(local)) { flags.push('repetitive_characters'); ded+=15; }
+
+  // Role-based
+  if (isOptOn('opt-role')) {
+    const lb = local.replace(/[._+-]/g,'');
+    if (ROLE_BASED.has(local)||ROLE_BASED.has(lb)) { flags.push('role_based_address'); ded+=15; }
+  }
+
+  // Typo domain
+  if (isOptOn('opt-typo') && TYPO_DOMAINS[domain]) {
+    flags.push(`typo_domain:did_you_mean_${TYPO_DOMAINS[domain]}`); ded+=35;
+  }
+
+  // Domain heuristics
+  const dl = domain.split('.')[0];
+  if ((dl.match(/[bcdfghjklmnpqrstvwxyz]{5,}/gi)||[]).length>0) { flags.push('suspicious_domain_pattern'); ded+=10; }
+  if (/\d{4,}/.test(dl)) { flags.push('domain_many_digits'); ded+=8; }
+
+  // Layer 2 integration
+  if (l2.status==='disposable_domain') { flags.push('disposable_provider'); ded+=40; }
+  if (l2.status==='invalid_domain')    { flags.push('invalid_domain_no_dns'); ded+=45; }
+  if (l2.status==='unknown_domain')    { flags.push('unresolvable_domain'); ded+=10; }
+  if (l2.mx===false && l2.status==='valid_domain') { flags.push('no_mx_record'); ded+=10; }
+
+  const quality_score = Math.max(0, Math.min(100, 100-ded));
+  const risk_level = quality_score>=60 ? 'low' : quality_score>=40 ? 'medium' : 'high';
+  return { quality_score, risk_level, flags };
+}
+
+// ORCHESTRATOR
+async function verifyEmail(email, opts={}) {
+  const n = (email||'').trim().toLowerCase();
+  const l1 = validateSyntax(n);
+  if (l1.status==='invalid_format') {
+    return {
+      email:n, layer1_format:'invalid_format', layer2_domain:'skipped',
+      layer3_score:0, risk_level:'high',
+      flags:['invalid_syntax', l1.reason.toLowerCase().replace(/\s+/g,'_')],
+      _meta:{ l1_reason:l1.reason, l2_reason:null }
+    };
+  }
+  const l2 = await validateDomain(n, opts);
+  const l3 = scoreHeuristics(n, l2);
+  return {
+    email:n, layer1_format:'valid_format',
+    layer2_domain:l2.status,
+    layer3_score:l3.quality_score,
+    risk_level:l3.risk_level,
+    flags:l3.flags,
+    _meta:{ l1_reason:l1.reason, l2_reason:l2.reason }
+  };
+}
+
+async function verifyBatch(emails, opts={}) {
+  const { concurrency=8, skipDNS=false, onProgress } = opts;
+  let list = [...new Set(emails.map(e=>(e||'').trim().toLowerCase()).filter(Boolean))];
+  const results=[]; const total=list.length; let done=0;
+  for (let i=0;i<total;i+=concurrency) {
+    const chunk = list.slice(i,i+concurrency);
+    const cr = await Promise.all(chunk.map(e=>verifyEmail(e,{skipDNS})));
+    for (const r of cr) { results.push(r); done++; onProgress&&onProgress(done,total,r); }
+  }
+  return results;
+}
+
+// ═══════════════════════════════════════════════════════════
+// ── UI STATE ──
+// ═══════════════════════════════════════════════════════════
+
+let parsedRows = [];
+let allResults = [];
+let currentFilter = 'all';
+
+function isOptOn(id) { return document.getElementById(id)?.classList.contains('on'); }
+
+// Toggle options
+document.querySelectorAll('.opt-item').forEach(item => {
+  item.addEventListener('click', () => {
+    item.classList.toggle('on');
+    item.querySelector('.opt-check').textContent = item.classList.contains('on') ? '✓' : '';
+  });
+});
+
+// Drag & drop
+const zone = document.getElementById('uploadZone');
+zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('over'); });
+zone.addEventListener('dragleave', () => zone.classList.remove('over'));
+zone.addEventListener('drop', e => { e.preventDefault(); zone.classList.remove('over'); const f=e.dataTransfer.files[0]; if(f) handleFile(f); });
+document.getElementById('fileInput').addEventListener('change', e => { if(e.target.files[0]) handleFile(e.target.files[0]); });
+
+function handleFile(file) {
+  const ext = file.name.split('.').pop().toLowerCase();
+  if (!['csv','xlsx','xls','txt'].includes(ext)) { alert('Unsupported format. Use CSV, Excel, or TXT.'); return; }
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      let rows = [];
+      if (ext==='csv'||ext==='txt') {
+        const lines = e.target.result.split('\n').filter(l=>l.trim());
+        const sep = lines[0].includes(';') ? ';' : ',';
+        rows = lines.map(l=>l.split(sep).map(c=>c.replace(/"/g,'').trim()));
+      } else {
+        const wb = XLSX.read(e.target.result,{type:'binary'});
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        rows = XLSX.utils.sheet_to_json(ws,{header:1});
+      }
+      processRows(rows, file.name, file.size);
+    } catch(err) { alert('Could not read file: '+err.message); }
+  };
+  if (ext==='xlsx'||ext==='xls') reader.readAsBinaryString(file);
+  else reader.readAsText(file);
+}
+
+function processRows(rows, name, size) {
+  if (rows.length<2) { alert('File is empty or has no data.'); return; }
+  const headers = rows[0].map(h=>String(h).toLowerCase().trim());
+  const idx = headers.findIndex(h=>h==='email');
+  if (idx===-1) { alert('Column "email" not found!\n\nMake sure one column header is exactly: email'); return; }
+  parsedRows = rows.slice(1).filter(r=>r[idx]&&String(r[idx]).trim()).map(r=>({ email:String(r[idx]).trim().toLowerCase() }));
+  if (!parsedRows.length) { alert('No emails found in the "email" column.'); return; }
+  const icons={csv:'📊',xlsx:'📗',xls:'📗',txt:'📄'};
+  document.getElementById('filePillIcon').textContent = icons[name.split('.').pop().toLowerCase()]||'📄';
+  document.getElementById('filePillName').textContent = name;
+  document.getElementById('filePillMeta').textContent = `${parsedRows.length} emails found · ${(size/1024).toFixed(1)} KB`;
+  document.getElementById('filePill').classList.add('show');
+  document.getElementById('runBtn').disabled = false;
+}
+
+function clearFile() {
+  parsedRows=[];
+  document.getElementById('filePill').classList.remove('show');
+  document.getElementById('fileInput').value='';
+  document.getElementById('runBtn').disabled=true;
+}
+
+// ── Single test ──
+async function testSingle() {
+  const email = document.getElementById('singleInput').value.trim();
+  if (!email) return;
+  const btn = document.getElementById('singleBtn');
+  btn.innerHTML='<span class="spin"></span> Checking...';
+  btn.disabled=true;
+  const skipDNS = document.getElementById('offlineToggle').checked;
+  const r = await verifyEmail(email, { skipDNS });
+  btn.textContent='Verify Email'; btn.disabled=false;
+  renderJSON(r);
+}
+
+document.getElementById('singleInput').addEventListener('keydown', e => {
+  if (e.key==='Enter') testSingle();
+});
+
+function renderJSON(r) {
+  const el = document.getElementById('jsonPreview');
+  const flagsHTML = r.flags.length
+    ? '[\n    ' + r.flags.map(f=>`<span class="jv-pur">"${esc(f)}"</span>`).join(',\n    ') + '\n  ]'
+    : '<span class="jv-grey">[]</span>';
+  const riskClass = { low:'jv-low', medium:'jv-med', high:'jv-high' }[r.risk_level]||'jv-grey';
+  const l2Class   = r.layer2_domain==='valid_domain'?'jv-ok':r.layer2_domain==='invalid_domain'?'jv-bad':'jv-med';
+  const l1Class   = r.layer1_format==='valid_format'?'jv-ok':'jv-bad';
+  const scoreColor = r.layer3_score>=60?'jv-low':r.layer3_score>=40?'jv-med':'jv-high';
+  el.innerHTML = `{
+  <span class="jk">"email"</span>:          <span class="jv-str">"${esc(r.email)}"</span>,
+  <span class="jk">"layer1_format"</span>:  <span class="${l1Class}">"${r.layer1_format}"</span>,
+  <span class="jk">"layer2_domain"</span>:  <span class="${l2Class}">"${r.layer2_domain}"</span>,
+  <span class="jk">"layer3_score"</span>:   <span class="${scoreColor}">${r.layer3_score}</span>,
+  <span class="jk">"risk_level"</span>:     <span class="${riskClass}">"${r.risk_level}"</span>,
+  <span class="jk">"flags"</span>:          ${flagsHTML},
+  <span class="jk">"_meta"</span>: {
+    <span class="jk">"l1_reason"</span>: <span class="jv-str">"${esc(r._meta?.l1_reason||'')}"</span>,
+    <span class="jk">"l2_reason"</span>: <span class="jv-str">"${esc(r._meta?.l2_reason||'')}"</span>
+  }
+}`;
+  el.classList.add('show');
+}
+
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// ── Batch run ──
+async function runBatch() {
+  if (!parsedRows.length) return;
+  const runBtn = document.getElementById('runBtn');
+  runBtn.disabled=true; runBtn.innerHTML='<span class="spin"></span> Processing...';
+  document.getElementById('section-progress').style.display='block';
+  document.getElementById('section-results').style.display='none';
+  document.getElementById('section-progress').scrollIntoView({behavior:'smooth',block:'nearest'});
+
+  allResults=[];
+  const skipDNS = document.getElementById('offlineToggle').checked;
+  const emails = parsedRows.map(r=>r.email);
+
+  await verifyBatch(emails, {
+    concurrency: 6,
+    skipDNS,
+    onProgress: (done, total, r) => {
+      allResults.push(r);
+      const pct = Math.round(done/total*100);
+      document.getElementById('progBar').style.width=pct+'%';
+      document.getElementById('progPct').textContent=pct+'%';
+      document.getElementById('progLabel').textContent=`Verifying ${done} of ${total}`;
+      document.getElementById('progSub').textContent=`→ ${r.email}`;
+    }
+  });
+
+  document.getElementById('progLabel').textContent='✓ Complete!';
+  document.getElementById('progSub').textContent=`${allResults.length} emails verified`;
+  runBtn.disabled=false; runBtn.innerHTML='⚡ Run Verification';
+  renderResults();
+}
+
+function renderResults() {
+  const low    = allResults.filter(r=>r.risk_level==='low').length;
+  const med    = allResults.filter(r=>r.risk_level==='medium').length;
+  const high   = allResults.filter(r=>r.risk_level==='high').length;
+  const disp   = allResults.filter(r=>r.layer2_domain==='disposable_domain').length;
+  document.getElementById('sTotal').textContent=allResults.length;
+  document.getElementById('sValid').textContent=low;
+  document.getElementById('sRisky').textContent=med;
+  document.getElementById('sInvalid').textContent=high;
+  document.getElementById('sDisp').textContent=disp;
+  document.getElementById('section-results').style.display='block';
+  setFilter('all');
+  document.getElementById('section-results').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function setFilter(f) {
+  currentFilter=f;
+  document.querySelectorAll('.fbtn').forEach(b=>b.classList.remove('active'));
+  document.querySelector(`.fbtn-${f==='all'?'all':f==='low'?'valid':f==='medium'?'risky':'invalid'}`)?.classList.add('active');
+  const data = f==='all'?allResults:allResults.filter(r=>r.risk_level===f);
+  const tbody = document.getElementById('resultsBody');
+  tbody.innerHTML='';
+  data.forEach((r,i)=>{
+    const l2cls = {valid_domain:'l2-valid',invalid_domain:'l2-invalid',disposable_domain:'l2-disp',unknown_domain:'l2-unk',skipped:'l2-skip'}[r.layer2_domain]||'l2-skip';
+    const riskCls = {low:'sb-low',medium:'sb-medium',high:'sb-high'}[r.risk_level]||'sb-high';
+    const scoreColor = r.layer3_score>=60?'#10d97a':r.layer3_score>=40?'#f59e0b':'#f43060';
+    const flagsHtml = r.flags.length===0
+      ? '<span class="no-flags">—</span>'
+      : r.flags.slice(0,3).map(f=>{
+          const cls = f.includes('invalid')||f.includes('bad')||f.includes('excessive')||f.includes('random')||f.includes('keyboard') ? 'fc-bad'
+                    : f.includes('typo')||f.includes('role')||f.includes('short')||f.includes('risky') ? 'fc-warn' : '';
+          return `<span class="flag-chip ${cls}">${esc(f.length>22?f.slice(0,22)+'…':f)}</span>`;
+        }).join('')+(r.flags.length>3?`<span class="flag-chip">+${r.flags.length-3}</span>`:'');
+    const tr = document.createElement('tr');
+    tr.innerHTML=`
+      <td style="color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:10px">${i+1}</td>
+      <td class="email-mono" title="${esc(r.email)}">${esc(r.email.length>30?r.email.slice(0,30)+'…':r.email)}</td>
+      <td><span class="${r.layer1_format==='valid_format'?'l1-ok':'l1-no'}">${r.layer1_format==='valid_format'?'✓ valid':'✗ invalid'}</span></td>
+      <td><span class="l2-tag ${l2cls}">${r.layer2_domain.replace('_domain','').replace('_',' ')}</span></td>
+      <td>
+        <div class="score-bar-wrap">
+          <div class="score-mini"><div class="score-mini-fill" style="width:${r.layer3_score}%;background:${scoreColor}"></div></div>
+          <span class="score-num" style="color:${scoreColor}">${r.layer3_score}</span>
+        </div>
+      </td>
+      <td><span class="sbadge ${riskCls}"><span class="sbadge-dot"></span>${r.risk_level}</span></td>
+      <td><div class="flags-wrap">${flagsHtml}</div></td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+// ── Exports ──
+function exportCSV(filter) {
+  const data = filter==='all'?allResults:allResults.filter(r=>r.risk_level===filter);
+  const header = ['email','layer1_format','layer2_domain','layer3_score','risk_level','flags'];
+  const rows = data.map(r=>[r.email,r.layer1_format,r.layer2_domain,r.layer3_score,r.risk_level,r.flags.join('|')]);
+  const csv = [header,...rows].map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  download('\uFEFF'+csv, `email_verification_${filter}_${today()}.csv`, 'text/csv;charset=utf-8;');
+}
+
+function exportJSON() {
+  const clean = allResults.map(({email,layer1_format,layer2_domain,layer3_score,risk_level,flags})=>
+    ({email,layer1_format,layer2_domain,layer3_score,risk_level,flags}));
+  download(JSON.stringify(clean,null,2), `email_verification_${today()}.json`, 'application/json');
+}
+
+function download(content, filename, mime) {
+  const blob = new Blob([content],{type:mime});
+  const a = document.createElement('a');
+  a.href=URL.createObjectURL(blob); a.download=filename; a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function today() { return new Date().toISOString().slice(0,10); }
+</script>
+</body>
+</html>
