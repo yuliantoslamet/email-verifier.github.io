@@ -1241,11 +1241,19 @@ function setFilter(f) {
 function exportCSV(filter) {
   const data = filter==='all'?allResults:allResults.filter(r=>r.risk_level===filter);
   const extraHeaders = window._extraHeaders || [];
-  const header = ['email', ...extraHeaders];
+  // Detect which key is "name" (nama/name), rest go to attributes
+  const nameKey = extraHeaders.find(h=>h==='name'||h==='nama') || extraHeaders[0] || null;
+  const attrKeys = extraHeaders.filter(h=>h!==nameKey);
+
+  const header = ['email','name','attributes'];
   const rows = data.map(r=>{
     const parsed = parsedRows.find(p=>p.email===r.email)||{};
-    const extraVals = extraHeaders.map(h=>(parsed.extra && parsed.extra[h]!=null) ? parsed.extra[h] : '');
-    return [r.email, ...extraVals];
+    const extra = parsed.extra || {};
+    const nameVal = nameKey ? (extra[nameKey]||'') : '';
+    const attrsObj = {};
+    attrKeys.forEach(k=>{ if(extra[k]!==undefined && extra[k]!=='') attrsObj[k]=extra[k]; });
+    const attrsStr = JSON.stringify(attrsObj);
+    return [r.email, nameVal, attrsStr];
   });
   const csv = [header,...rows].map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
   download('\uFEFF'+csv, `email_verification_${filter}_${today()}.csv`, 'text/csv;charset=utf-8;');
